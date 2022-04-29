@@ -6,7 +6,7 @@
 ![Github report](https://img.shields.io/badge/go%20report-A%2B-green)
 [![GitHub stars](https://img.shields.io/github/stars/atopx/logical)](https://github.com/atopx/logical/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/atopx/logical)](https://github.com/atopx/logical/network)
-[![GitHub issues](https://img.shields.io/github/issues/atopx/logical)](https://github.com/yanmengfei/atopx/logical)
+[![GitHub issues](https://img.shields.io/github/issues/atopx/logical)](https://github.com/atopx/logical/issues)
 
 logical is tool for synchronizing from PostgreSQL to custom handler through replication slot
 
@@ -36,7 +36,7 @@ host $dbname $user $address md5  # example: `host webstore itmeng 192.168.0.1/24
 ### Install
 
 ```shell
-go get github.com/yanmengfei/logical
+go get github.com/atopx/logical
 ```
 
 ### Example
@@ -49,9 +49,9 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx"
-	"github.com/yanmengfei/logical/logger"
-	"github.com/yanmengfei/logical/client"
-	"github.com/yanmengfei/logical/model"
+	"github.com/atopx/logical/logger"
+	"github.com/atopx/logical/client"
+	"github.com/atopx/logical/model"
 )
 
 func callback(records []*model.Waldata) {
