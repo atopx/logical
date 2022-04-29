@@ -1,7 +1,12 @@
 # logical
 
 [![golang](https://img.shields.io/badge/Language-Go-green.svg?style=flat)](https://golang.org)
-[![GitHub release](https://img.shields.io/github/release/yanmengfei/logical.svg)](https://github.com/yanmengfei/logical/releases)
+[![GitHub release](https://img.shields.io/github/release/atopx/logical.svg)](https://github.com/atopx/logical/releases)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/atopx/logical)
+![Github report](https://img.shields.io/badge/go%20report-A%2B-green)
+[![GitHub stars](https://img.shields.io/github/stars/atopx/logical)](https://github.com/atopx/logical/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/atopx/logical)](https://github.com/atopx/logical/network)
+[![GitHub issues](https://img.shields.io/github/issues/atopx/logical)](https://github.com/yanmengfei/atopx/logical)
 
 logical is tool for synchronizing from PostgreSQL to custom handler through replication slot
 
