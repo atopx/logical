@@ -5,7 +5,7 @@ import "sync"
 type Operate uint8
 
 const (
-	UNKNOW Operate = iota
+	UNKNOWN Operate = iota
 	BEGIN
 	INSERT
 	DELETE
@@ -14,7 +14,7 @@ const (
 )
 
 var operate = sync.Map{}
-var unoperate = [6]string{"UNKNOW", "BEGIN", "INSERT", "DELETE", "UPDATE", "COMMIT"}
+var unoperate = [6]string{"UNKNOWN", "BEGIN", "INSERT", "DELETE", "UPDATE", "COMMIT"}
 
 func init() {
 	operate.Store("INSERT", INSERT)
@@ -22,7 +22,7 @@ func init() {
 	operate.Store("DELETE", DELETE)
 	operate.Store("BEGIN", BEGIN)
 	operate.Store("COMMIT", COMMIT)
-	operate.Store("UNKNOW", UNKNOW)
+	operate.Store("UNKNOWN", UNKNOWN)
 }
 
 func (o Operate) String() string {

@@ -86,12 +86,12 @@ func (w *Waldata) Decode(wal *pgx.WalMessage, tableName string) error {
 	return nil
 }
 
-func AcquireWaldata() *Waldata {
+func GetWaldata() *Waldata {
 	return datapool.Get().(*Waldata)
 }
 
-func ReleaseWaldata(waldata *Waldata) {
-	waldata.OperationType = UNKNOW
+func PutWaldata(waldata *Waldata) {
+	waldata.OperationType = UNKNOWN
 	waldata.Schema = ""
 	waldata.Table = ""
 	waldata.Data = nil

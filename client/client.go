@@ -29,8 +29,15 @@ type client struct {
 }
 
 // New client
-func New(cfg pgx.ConnConfig, table, slot string, callback func(records []*model.Waldata)) (*client, error) {
-	return &client{cfg: cfg, table: table, slot: slot, callback: callback}, nil
+func New(config *Config) *client {
+	connConfig := pgx.ConnConfig{
+		Host:     config.Host,
+		Port:     config.Port,
+		User:     config.User,
+		Password: config.Password,
+		Database: config.Database,
+	}
+	return &client{cfg: connConfig, table: config.Table, slot: config.Slot, callback: config.Callback}
 }
 
 // getReceivePosition get receive position
@@ -101,7 +108,7 @@ func (c *client) replication(message *pgx.ReplicationMessage) (err error) {
 		}
 	}
 	if message.WalMessage != nil {
-		var data = model.AcquireWaldata()
+		var data = model.GetWaldata()
 		if err = data.Decode(message.WalMessage, c.table); err != nil {
 			return fmt.Errorf("invalid postgres output message: %s", err)
 		}
@@ -116,13 +123,12 @@ func (c *client) replication(message *pgx.ReplicationMessage) (err error) {
 func (c *client) commit(data *model.Waldata) {
 	var flush bool
 	switch data.OperationType {
-	case model.BEGIN, model.UNKNOW:
+	case model.BEGIN, model.UNKNOWN:
 	case model.COMMIT:
 		flush = true
 	default:
 		c.records = append(c.records, data)
 		flush = len(c.records) > 20000
-		// TODO
 		if data.Pos > c.maxPosition {
 			c.maxPosition = data.Pos
 		}
@@ -130,6 +136,11 @@ func (c *client) commit(data *model.Waldata) {
 	if flush && len(c.records) > 0 {
 		c.callback(c.records)
 		c.setReplyPosition(c.maxPosition)
+		go func(records []*model.Waldata) {
+			for _, waldata := range records {
+				model.PutWaldata(waldata)
+			}
+		}(c.records)
 		c.records = nil
 	}
 }

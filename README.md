@@ -47,6 +47,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 
 	"github.com/jackc/pgx"
 	"github.com/atopx/logical/logger"
@@ -55,30 +56,31 @@ import (
 )
 
 func callback(records []*model.Waldata) {
-    for i := 0; i < len(records); i++ {
-        data := records[i]
-        fmt.Println(*data)
-        model.ReleaseWaldata(data)
-    }
+	for i := 0; i < len(records); i++ {
+		data := records[i]
+		fmt.Println(*data)
+	}
 }
 
 func main() {
-    cfg := pgx.ConnConfig{
-        Host:     "127.0.0.1",
-        Port:     5432,
-        User:     "itmeng",
-        Password: "postgres_logical",
-        Database: "webstore",
-    }
-    table := "book"
-    slot := "book_cache_slot"
-    c, err := client.New(cfg, table, slot, callback)
-    if err != nil {
-        logger.Panic(err.Error())
-    }
-    logger.Info("start postgresql logical replication client")
-    if err = c.Start(context.Background()); err != nil {
-    	logger.Panic(err.Error())
-    }
+	_ = logger.Setup(zap.InfoLevel.String())
+
+	c := client.New(&client.Config{
+		Host:     "127.0.0.1",
+		Port:     5432,
+		User:     "itmeng",
+		Password: "postgres_logical",
+		Database: "webstore",
+		Table:    "book",
+		Slot:     "book_cache_slot",
+		Callback: callback,
+	})
+	if err != nil {
+		logger.Panic(err.Error())
+	}
+	logger.Info("start postgresql logical replication client")
+	if err = c.Start(context.Background()); err != nil {
+		logger.Panic(err.Error())
+	}
 }
 ```
