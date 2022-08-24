@@ -18,7 +18,7 @@ var datapool = sync.Pool{New: func() interface{} { return new(Waldata) }}
 
 // Waldata represent parsed wal logger data
 type Waldata struct {
-	OperationType Operate
+	OperationType Operation
 	Schema        string
 	Table         string
 	Data          map[string]interface{}
@@ -49,11 +49,7 @@ func (w *Waldata) Decode(wal *pgx.WalMessage, tableName string) error {
 		w.Table = table
 	}
 	w.Pos = wal.WalStart
-	op, ok := operate.Load(result.Operation)
-	if !ok {
-		return nil
-	}
-	w.OperationType = op.(Operate)
+	w.OperationType = NewOperation(result.Operation)
 	w.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
 	if len(result.Columns) == 0 {
 		return nil

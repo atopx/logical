@@ -1,11 +1,9 @@
 package model
 
-import "sync"
-
-type Operate uint8
+type Operation uint8
 
 const (
-	UNKNOWN Operate = iota
+	UNKNOWN Operation = iota
 	BEGIN
 	INSERT
 	DELETE
@@ -13,18 +11,38 @@ const (
 	COMMIT
 )
 
-var operate = sync.Map{}
-var unoperate = [6]string{"UNKNOWN", "BEGIN", "INSERT", "DELETE", "UPDATE", "COMMIT"}
-
-func init() {
-	operate.Store("INSERT", INSERT)
-	operate.Store("UPDATE", UPDATE)
-	operate.Store("DELETE", DELETE)
-	operate.Store("BEGIN", BEGIN)
-	operate.Store("COMMIT", COMMIT)
-	operate.Store("UNKNOWN", UNKNOWN)
+func NewOperation(operate string) (op Operation) {
+	switch operate {
+	case "BEGIN":
+		op = BEGIN
+	case "INSERT":
+		op = INSERT
+	case "DELETE":
+		op = DELETE
+	case "UPDATE":
+		op = UPDATE
+	case "COMMIT":
+		op = COMMIT
+	default:
+		op = UNKNOWN
+	}
+	return op
 }
 
-func (o Operate) String() string {
-	return unoperate[int(o)]
+func (o Operation) String() (operate string) {
+	switch o {
+	case UNKNOWN:
+		operate = "UNKNOWN"
+	case BEGIN:
+		operate = "BEGIN"
+	case INSERT:
+		operate = "INSERT"
+	case DELETE:
+		operate = "DELETE"
+	case UPDATE:
+		operate = "UPDATE"
+	case COMMIT:
+		operate = "COMMIT"
+	}
+	return operate
 }
