@@ -1,7 +1,5 @@
 package client
 
-import "github.com/yanmengfei/logical/model"
-
 type Config struct {
 	Host     string
 	Port     uint16
@@ -10,5 +8,4 @@ type Config struct {
 	Database string
 	Table    string
 	Slot     string
-	Callback func(records []*model.Waldata)
 }

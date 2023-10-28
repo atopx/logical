@@ -40,31 +40,34 @@ go get github.com/atopx/logical
 ```
 
 ### Example
-
+> [example](./example.go)
 ```go
 package main
 
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 
-	"github.com/jackc/pgx"
-	"github.com/atopx/logical/logger"
-	"github.com/atopx/logical/client"
-	"github.com/atopx/logical/model"
+	"github.com/yanmengfei/logical/client"
+	"github.com/yanmengfei/logical/logger"
+	"github.com/yanmengfei/logical/model"
+	"go.uber.org/zap"
 )
 
-func callback(records []*model.Waldata) {
-	for i := 0; i < len(records); i++ {
-		data := records[i]
-		fmt.Println(*data)
+type Consumer struct{}
+
+func (h *Consumer) Deal(records []*model.Waldata) {
+	for _, record := range records {
+		fmt.Println(record)
+		// consumer data
 	}
 }
 
 func main() {
-	_ = logger.Setup(zap.InfoLevel.String())
-
+	err := logger.Setup(zap.InfoLevel.String())
+	if err != nil {
+		panic(err)
+	}
 	c := client.New(&client.Config{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -73,11 +76,8 @@ func main() {
 		Database: "webstore",
 		Table:    "book",
 		Slot:     "book_cache_slot",
-		Callback: callback,
 	})
-	if err != nil {
-		logger.Panic(err.Error())
-	}
+	c.Register(new(Consumer))
 	logger.Info("start postgresql logical replication client")
 	if err = c.Start(context.Background()); err != nil {
 		logger.Panic(err.Error())

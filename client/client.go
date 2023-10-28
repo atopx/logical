@@ -24,7 +24,7 @@ type client struct {
 	receivePosition uint64
 	replyPosition   uint64
 	maxPosition     uint64
-	callback        func(records []*model.Waldata)
+	handler         Handler
 	records         []*model.Waldata
 }
 
@@ -37,7 +37,7 @@ func New(config *Config) *client {
 		Password: config.Password,
 		Database: config.Database,
 	}
-	return &client{cfg: connConfig, table: config.Table, slot: config.Slot, callback: config.Callback}
+	return &client{cfg: connConfig, table: config.Table, slot: config.Slot}
 }
 
 // getReceivePosition get receive position
@@ -134,7 +134,7 @@ func (c *client) commit(data *model.Waldata) {
 		}
 	}
 	if flush && len(c.records) > 0 {
-		c.callback(c.records)
+		c.handler.Deal(c.records)
 		c.setReplyPosition(c.maxPosition)
 		go func(records []*model.Waldata) {
 			for _, waldata := range records {
@@ -156,6 +156,11 @@ func (c *client) timer(ctx context.Context) {
 			return
 		}
 	}
+}
+
+// Register custom data handler
+func (c *client) Register(hanler Handler) {
+	c.handler = hanler
 }
 
 // Start client
