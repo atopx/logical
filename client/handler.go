@@ -1,6 +1,6 @@
 package client
 
-import "github.com/yanmengfei/logical/model"
+import "github.com/atopx/logical/model"
 
 type Handler interface {
 	Deal([]*model.Waldata)

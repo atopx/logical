@@ -11,7 +11,7 @@
 logical is tool for synchronizing from PostgreSQL to custom handler through replication slot
 
 ## Required
-> requires Go 1.13 or greater.
+> requires Go 1.24 or greater.
 
 Postgresql 10.0+
 
@@ -48,9 +48,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/yanmengfei/logical/client"
-	"github.com/yanmengfei/logical/logger"
-	"github.com/yanmengfei/logical/model"
+	"github.com/atopx/logical/client"
+	"github.com/atopx/logical/logger"
+	"github.com/atopx/logical/model"
 	"go.uber.org/zap"
 )
 
@@ -58,8 +58,8 @@ type Consumer struct{}
 
 func (h *Consumer) Deal(records []*model.Waldata) {
 	for _, record := range records {
-		fmt.Println(record)
 		// consumer data
+		fmt.Println(record)
 	}
 }
 
@@ -68,17 +68,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	var handler Consumer
+
 	c := client.New(&client.Config{
 		Host:     "127.0.0.1",
 		Port:     5432,
-		User:     "itmeng",
+		User:     "postgres",
 		Password: "postgres_logical",
 		Database: "webstore",
 		Table:    "book",
 		Slot:     "book_cache_slot",
-	})
-	c.Register(new(Consumer))
+	}, &handler)
+
 	logger.Info("start postgresql logical replication client")
+
 	if err = c.Start(context.Background()); err != nil {
 		logger.Panic(err.Error())
 	}

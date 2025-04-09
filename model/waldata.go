@@ -12,16 +12,16 @@ import (
 	"github.com/nickelser/parselogical"
 )
 
-const datelayout = "2006-01-02 15:04:05"
+// const datelayout = "2006-01-02 15:04:05"
 
-var datapool = sync.Pool{New: func() interface{} { return new(Waldata) }}
+var datapool = sync.Pool{New: func() any { return new(Waldata) }}
 
 // Waldata represent parsed wal logger data
 type Waldata struct {
 	OperationType Operation
 	Schema        string
 	Table         string
-	Data          map[string]interface{}
+	Data          map[string]any
 	Timestamp     int64
 	Pos           uint64
 	Rule          string
@@ -54,9 +54,9 @@ func (w *Waldata) Decode(wal *pgx.WalMessage, tableName string) error {
 	if len(result.Columns) == 0 {
 		return nil
 	}
-	w.Data = make(map[string]interface{}, len(result.Columns))
+	w.Data = make(map[string]any, len(result.Columns))
 	for key, cell := range result.Columns {
-		var value interface{}
+		var value any
 		if cell.Value != "null" {
 			switch cell.Type {
 			case "boolean":
@@ -68,10 +68,10 @@ func (w *Waldata) Decode(wal *pgx.WalMessage, tableName string) error {
 			case "character varying[]":
 				value = strings.Split(cell.Value[1:len(cell.Value)-1], ",")
 			case "jsonb":
-				value = make(map[string]interface{})
+				value = make(map[string]any)
 				_ = jsoniter.UnmarshalFromString(cell.Value, &value)
 			case "timestamp without time zone":
-				value, _ = time.Parse(datelayout, cell.Value)
+				value, _ = time.Parse(time.DateTime, cell.Value)
 			default:
 				value = cell.Value
 			}
@@ -82,12 +82,12 @@ func (w *Waldata) Decode(wal *pgx.WalMessage, tableName string) error {
 	return nil
 }
 
-func GetWaldata() *Waldata {
+func NewWaldata() *Waldata {
 	return datapool.Get().(*Waldata)
 }
 
 func PutWaldata(waldata *Waldata) {
-	waldata.OperationType = UNKNOWN
+	waldata.OperationType = Unknown
 	waldata.Schema = ""
 	waldata.Table = ""
 	waldata.Data = nil

@@ -3,45 +3,45 @@ package model
 type Operation uint8
 
 const (
-	UNKNOWN Operation = iota
-	BEGIN
-	INSERT
-	DELETE
-	UPDATE
-	COMMIT
+	Unknown Operation = iota
+	Begin
+	Insert
+	Delete
+	Update
+	Commit
 )
 
 func NewOperation(operate string) (op Operation) {
 	switch operate {
 	case "BEGIN":
-		op = BEGIN
+		op = Begin
 	case "INSERT":
-		op = INSERT
+		op = Insert
 	case "DELETE":
-		op = DELETE
+		op = Delete
 	case "UPDATE":
-		op = UPDATE
+		op = Update
 	case "COMMIT":
-		op = COMMIT
+		op = Commit
 	default:
-		op = UNKNOWN
+		op = Unknown
 	}
 	return op
 }
 
 func (o Operation) String() (operate string) {
 	switch o {
-	case UNKNOWN:
+	case Unknown:
 		operate = "UNKNOWN"
-	case BEGIN:
+	case Begin:
 		operate = "BEGIN"
-	case INSERT:
+	case Insert:
 		operate = "INSERT"
-	case DELETE:
+	case Delete:
 		operate = "DELETE"
-	case UPDATE:
+	case Update:
 		operate = "UPDATE"
-	case COMMIT:
+	case Commit:
 		operate = "COMMIT"
 	}
 	return operate

@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/atopx/logical/logger"
+	"github.com/atopx/logical/model"
 	"github.com/jackc/pgx"
-	"github.com/yanmengfei/logical/logger"
-	"github.com/yanmengfei/logical/model"
 	"go.uber.org/zap"
 )
 
@@ -24,12 +24,12 @@ type client struct {
 	receivePosition uint64
 	replyPosition   uint64
 	maxPosition     uint64
-	handler         Handler
+	handlers        []Handler
 	records         []*model.Waldata
 }
 
 // New client
-func New(config *Config) *client {
+func New(config *Config, handlers ...Handler) *client {
 	connConfig := pgx.ConnConfig{
 		Host:     config.Host,
 		Port:     config.Port,
@@ -37,7 +37,7 @@ func New(config *Config) *client {
 		Password: config.Password,
 		Database: config.Database,
 	}
-	return &client{cfg: connConfig, table: config.Table, slot: config.Slot}
+	return &client{cfg: connConfig, table: config.Table, slot: config.Slot, handlers: handlers}
 }
 
 // getReceivePosition get receive position
@@ -108,7 +108,7 @@ func (c *client) replication(message *pgx.ReplicationMessage) (err error) {
 		}
 	}
 	if message.WalMessage != nil {
-		var data = model.GetWaldata()
+		var data = model.NewWaldata()
 		if err = data.Decode(message.WalMessage, c.table); err != nil {
 			return fmt.Errorf("invalid postgres output message: %s", err)
 		}
@@ -123,8 +123,8 @@ func (c *client) replication(message *pgx.ReplicationMessage) (err error) {
 func (c *client) commit(data *model.Waldata) {
 	var flush bool
 	switch data.OperationType {
-	case model.BEGIN, model.UNKNOWN:
-	case model.COMMIT:
+	case model.Begin, model.Unknown:
+	case model.Commit:
 		flush = true
 	default:
 		c.records = append(c.records, data)
@@ -134,13 +134,15 @@ func (c *client) commit(data *model.Waldata) {
 		}
 	}
 	if flush && len(c.records) > 0 {
-		c.handler.Deal(c.records)
+
+		for _, handler := range c.handlers {
+			handler.Deal(c.records)
+		}
+
 		c.setReplyPosition(c.maxPosition)
-		go func(records []*model.Waldata) {
-			for _, waldata := range records {
-				model.PutWaldata(waldata)
-			}
-		}(c.records)
+		for _, waldata := range c.records {
+			model.PutWaldata(waldata)
+		}
 		c.records = nil
 	}
 }
@@ -158,22 +160,32 @@ func (c *client) timer(ctx context.Context) {
 	}
 }
 
-// Register custom data handler
-func (c *client) Register(hanler Handler) {
-	c.handler = hanler
-}
-
 // Start client
 func (c *client) Start(ctx context.Context) error {
-	ctx, c.cancel = context.WithCancel(ctx)
-	_, err := c.connect()
-	if err != nil {
+
+	if len(c.handlers) == 0 {
+		return fmt.Errorf("handler is empty")
+	}
+
+	if _, err := c.connect(); err != nil {
 		return err
 	}
-	if err = c.heartbeat(); err != nil {
+	if err := c.heartbeat(); err != nil {
 		return err
 	}
+
+	// timer heartbeat
 	go c.timer(ctx)
+
+	// panic recovery
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Error("panic recovery", zap.Any("error", err))
+			}
+		}()
+	}()
+
 	for {
 		message, err := c.repConn.WaitForReplicationMessage(ctx)
 		if err != nil {
