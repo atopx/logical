@@ -5,7 +5,6 @@ go 1.24
 require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/json-iterator/go v1.1.12
-	github.com/nickelser/parselogical v0.0.0-20171014195826-b07373e53c91
 	go.uber.org/zap v1.27.0
 )
 

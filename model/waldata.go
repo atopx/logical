@@ -7,12 +7,10 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/atopx/logical/parser"
 	"github.com/jackc/pgx"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/nickelser/parselogical"
 )
-
-// const datelayout = "2006-01-02 15:04:05"
 
 var datapool = sync.Pool{New: func() any { return new(Waldata) }}
 
@@ -28,7 +26,9 @@ type Waldata struct {
 }
 
 func (w *Waldata) Decode(wal *pgx.WalMessage, tableName string) error {
-	result := parselogical.NewParseResult(*(*string)(unsafe.Pointer(&wal.WalData)))
+	// convert []byte to string without memory allocatio
+	msg := *(*string)(unsafe.Pointer(&wal.WalData))
+	result := parser.New(msg)
 	if err := result.Parse(); err != nil {
 		return err
 	}
